@@ -1,0 +1,83 @@
+# Risk-engine configuration.
+# Every risk parameter, limit and warning threshold used by the engine is read
+# from this file. Environment variables (see .env.example) control
+# infrastructure only (database URL, log level, file locations).
+
+portfolio:
+  portfolio_id: GMF001
+  name: Global Macro Fund
+  base_currency: USD
+
+risk:
+  confidence_level: 0.99
+  lookback_days: 250
+  holding_period: 1
+  ewma_lambda: 0.94
+  return_type: log            # log | simple (used for volatility / covariance estimation)
+  covariance_method: EWMA     # SAMPLE | EWMA
+  vol_factor_model: LEVEL_SKEW_TERM # implied-vol risk factors in VaR: LEVEL | LEVEL_SKEW_TERM (level + skew + term structure)
+  horizon_method: OVERLAPPING # multi-day VaR: OVERLAPPING (true h-day scenarios) | SQRT_TIME (scale 1-day figures)
+  trading_days_per_year: 252
+  confidence_options: [0.95, 0.99]
+  lookback_options: [100, 250, 500]
+  holding_period_options: [1, 5, 10]
+  decay_options: [0.90, 0.94, 0.97, 0.99]
+  min_observations: 50        # hard floor for any VaR estimate
+  rolling_vol_windows: [20, 60]
+
+limits:
+  var_limit: 0.05             # 1D VaR as a fraction of NAV
+  es_limit: 0.07              # 1D ES as a fraction of NAV
+  equity_exposure_limit: 0.60 # net equity market value / NAV
+  single_position_limit: 0.15 # |position market value| / NAV
+  stress_loss_limit: 0.15     # scenario loss / NAV (Scenario Builder & stress pages)
+
+concentration:
+  var_contribution_warning: 0.25      # single position share of total VaR
+  currency_concentration_warning: 0.70 # single currency share of gross currency exposure
+  asset_class_concentration_warning: 0.60
+  stress_loss_contribution_warning: 0.40 # single position share of worst-scenario loss
+
+stress:
+  default_equity_shock: -0.20
+  default_rate_shock_bps: 200
+  equity_shock_ladder: [-0.05, -0.10, -0.20, -0.30, -0.40]
+  rate_shock_ladder_bps: [25, 50, 100, 200]
+  vol_shock_ladder: [0.05, 0.10, 0.15, -0.05]
+  fx_shocks:
+    - {currency: USD, shock: 0.05}
+    - {currency: USD, shock: -0.05}
+    - {currency: EUR, shock: 0.10}
+    - {currency: EUR, shock: -0.10}
+    - {currency: INR, shock: 0.10}
+    - {currency: INR, shock: -0.10}
+  default_vol_method: STICKY_STRIKE   # STICKY_STRIKE | STICKY_DELTA
+  default_bond_method: FULL_REPRICING # FULL_REPRICING | SENSITIVITY
+  min_volatility: 0.01                # floor applied to shocked implied vols
+  beta_lookback_days: 250             # history used to estimate equity betas for beta-mapped scenarios
+
+backtest:
+  significance_level: 0.05
+  rolling_window: 60
+  default_method: HISTORICAL          # HISTORICAL | EW_HISTORICAL | PARAMETRIC | EW_PARAMETRIC | FILTERED_HISTORICAL | MONTE_CARLO
+
+simulation:
+  monte_carlo_paths: 10000            # paths for the valuation-date Monte Carlo VaR
+  backtest_paths: 1000                # paths per day in the rolling Monte Carlo backtest
+  distribution: STUDENT_T             # NORMAL | STUDENT_T (joint fat tails)
+  degrees_of_freedom: 6               # Student-t only; must exceed 2
+  seed: 2026                          # RNG seed: identical inputs give identical results
+  antithetic: true                    # antithetic variates (Z and -Z)
+  fhs_ratio_floor: 0.3333             # bounds on the sigma_today / sigma_then scaling ratio
+  fhs_ratio_cap: 3.0
+  fhs_seed_observations: 20           # observations used to seed the EWMA volatility filter
+
+pnl:
+  tolerance: 0.01                     # |explained + residual - actual| tolerance (USD)
+  attribution_days: 60
+
+market_data:
+  seed: 42
+  n_days: 756
+  end_date: "2026-09-30"
+  max_forward_fill_days: 5

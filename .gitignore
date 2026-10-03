@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Environment
+.env
+
+# Local database & runtime output
+data/processed/*
+!data/processed/.gitkeep
+data/raw/*
+!data/raw/.gitkeep
+*.db
+*.db-wal
+*.db-shm
+logs/*
+!logs/.gitkeep
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Generated sample data (re-created deterministically on first launch);
+# the portfolio file is kept as an upload template.
+data/sample/*
+!data/sample/sample_portfolio.csv
+reports/

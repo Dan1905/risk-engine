@@ -1,0 +1,60 @@
+# Multi-Asset Risk Engine on PostgreSQL.
+#
+#   docker compose up --build        # dashboard at http://localhost:8501
+#   docker compose run --rm eod python scripts/run_eod.py     # one-off end-of-day run
+#
+# Services
+#   db   PostgreSQL 16 (data in the "pgdata" volume)
+#   app  Streamlit dashboard; creates the schema and seeds sample data on first use
+#   eod  scheduled end-of-day batch (weekdays at EOD_TIME, container-local time);
+#        it also initialises the database itself if it runs before the dashboard is opened
+#
+# Set POSTGRES_PASSWORD (and optionally EOD_TIME / TZ / APP_PORT) in the environment or a .env file.
+
+x-risk-engine: &risk-engine
+  build: .
+  image: risk-engine:latest
+  environment: &risk-env
+    DATABASE_URL: postgresql+psycopg://risk:${POSTGRES_PASSWORD:-risk_local_only}@db:5432/risk_engine
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    TZ: ${TZ:-UTC}
+  depends_on:
+    db:
+      condition: service_healthy
+  volumes:
+    - reports:/app/reports
+    - logs:/app/logs
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: risk_engine
+      POSTGRES_USER: risk
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-risk_local_only}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U risk -d risk_engine"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  app:
+    <<: *risk-engine
+    ports:
+      - "${APP_PORT:-8501}:8501"
+    restart: unless-stopped
+
+  eod:
+    <<: *risk-engine
+    command: ["python", "scripts/run_eod.py", "--schedule", "${EOD_TIME:-18:00}"]
+    healthcheck:
+      disable: true   # the image health check probes the dashboard port, which this service does not serve
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  reports:
+  logs:

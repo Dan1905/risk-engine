@@ -1,0 +1,115 @@
+# Predefined stress scenarios.
+#
+# Units: equity / fx shocks are simple returns (-0.20 = -20%); *_bps fields are basis
+# points; volatility_shock is absolute vol points as a decimal (0.15 = +15 vols).
+# fx_shocks keys are currencies; +0.10 means that currency appreciates 10% vs USD.
+# fx_shock (without "s") is a USD move vs every currency: +0.10 = USD strengthens 10%.
+#
+# shock_basis marks each input as HISTORICAL_OBSERVATION (an observed market move,
+# rounded) or HYPOTHETICAL_ASSUMPTION (a modelling choice).  Historical moves are
+# approximate index-level observations used as a scenario framework; they are applied
+# to equities either uniformly or - with equity_beta_mapping: true - scaled by each
+# name's beta to the equity market (shock_i = beta_i x equity_shock), which adds
+# single-stock dispersion while keeping the average move equal to the index move.
+
+scenarios:
+  - scenario_id: GFC_2008
+    name: 2008 Financial Crisis
+    category: HISTORICAL
+    window: 29-Aug-2008 to 20-Nov-2008
+    description: >-
+      Lehman-period sell-off. Equities fall ~41% (S&P 500), Treasuries rally in a
+      flight to quality with the front end falling most, the USD strengthens sharply,
+      implied volatility and IG credit spreads blow out.
+    equity_shock: -0.41
+    equity_beta_mapping: true
+    curve_shocks_bps: {3M: -165, 6M: -150, 1Y: -135, 2Y: -125, 3Y: -115, 5Y: -105, 7Y: -95, 10Y: -80, 20Y: -60, 30Y: -55}
+    fx_shocks: {EUR: -0.15, GBP: -0.19, INR: -0.11}
+    volatility_shock: 0.60
+    credit_spread_shock_bps: 250
+    shock_basis:
+      equity: HISTORICAL_OBSERVATION
+      rates: HISTORICAL_OBSERVATION
+      fx: HISTORICAL_OBSERVATION
+      volatility: HYPOTHETICAL_ASSUMPTION
+      credit: HISTORICAL_OBSERVATION
+    source_notes: >-
+      Approximate, rounded index-level moves over the window (S&P 500, UST curve,
+      EUR/GBP/INR vs USD, IG OAS). The VIX change (~+60 pts) is applied 1:1 as a
+      parallel shift to single-name ATM implied vols - a modelling assumption.
+
+  - scenario_id: COVID_2020
+    name: COVID Crash
+    category: HISTORICAL
+    window: 19-Feb-2020 to 23-Mar-2020
+    description: >-
+      Pandemic shock. Equities fall ~34%, the Fed cuts to zero so the front end
+      collapses, GBP and INR weaken, EUR roughly flat, volatility and credit spreads spike.
+    equity_shock: -0.34
+    equity_beta_mapping: true
+    curve_shocks_bps: {3M: -155, 6M: -150, 1Y: -140, 2Y: -113, 3Y: -105, 5Y: -90, 7Y: -85, 10Y: -80, 20Y: -75, 30Y: -67}
+    fx_shocks: {EUR: -0.01, GBP: -0.10, INR: -0.06}
+    volatility_shock: 0.45
+    credit_spread_shock_bps: 280
+    shock_basis:
+      equity: HISTORICAL_OBSERVATION
+      rates: HISTORICAL_OBSERVATION
+      fx: HISTORICAL_OBSERVATION
+      volatility: HYPOTHETICAL_ASSUMPTION
+      credit: HISTORICAL_OBSERVATION
+    source_notes: >-
+      Approximate, rounded peak-to-trough moves. The VIX change (~+47 pts) is applied
+      as a +45 vol parallel shift to single-name ATM vols - a modelling assumption.
+
+  - scenario_id: EQUITY_CRASH
+    name: Equity Crash
+    category: HYPOTHETICAL
+    description: Instantaneous 20% fall in all equities and option underlyings; other factors unchanged.
+    equity_shock: -0.20
+    shock_basis: {equity: HYPOTHETICAL_ASSUMPTION}
+
+  - scenario_id: RATES_UP_200
+    name: +200bps Rates
+    category: HYPOTHETICAL
+    description: Parallel +200 bp shift of every Treasury curve node.
+    rates_shock_bps: 200
+    shock_basis: {rates: HYPOTHETICAL_ASSUMPTION}
+
+  - scenario_id: GLOBAL_RISK_OFF
+    name: Global Risk-Off
+    category: HYPOTHETICAL
+    description: >-
+      Combined risk-off: equities -20%, rates +150 bp, USD +10% vs all currencies,
+      implied vol +15 pts, IG credit spreads +200 bp.
+    equity_shock: -0.20
+    rates_shock_bps: 150
+    fx_shock: 0.10
+    volatility_shock: 0.15
+    credit_spread_shock_bps: 200
+    shock_basis:
+      equity: HYPOTHETICAL_ASSUMPTION
+      rates: HYPOTHETICAL_ASSUMPTION
+      fx: HYPOTHETICAL_ASSUMPTION
+      volatility: HYPOTHETICAL_ASSUMPTION
+      credit: HYPOTHETICAL_ASSUMPTION
+
+  - scenario_id: CURVE_STEEPENER
+    name: Steepener
+    category: YIELD_CURVE
+    description: Short rates +50 bp, long rates +150 bp (linear between the 2Y and 10Y pillars).
+    curve_twist: {short_bps: 50, long_bps: 150}
+    shock_basis: {rates: HYPOTHETICAL_ASSUMPTION}
+
+  - scenario_id: CURVE_FLATTENER
+    name: Flattener
+    category: YIELD_CURVE
+    description: Short rates +150 bp, long rates +50 bp.
+    curve_twist: {short_bps: 150, long_bps: 50}
+    shock_basis: {rates: HYPOTHETICAL_ASSUMPTION}
+
+  - scenario_id: CURVE_INVERSION
+    name: Inversion
+    category: YIELD_CURVE
+    description: Short rates +150 bp, long rates -50 bp.
+    curve_twist: {short_bps: 150, long_bps: -50}
+    shock_basis: {rates: HYPOTHETICAL_ASSUMPTION}

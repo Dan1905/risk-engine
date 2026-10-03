@@ -1,0 +1,19 @@
+# Python 3.11+
+# Analytics
+numpy>=1.26
+pandas>=2.2
+scipy>=1.13
+# Persistence & validation
+SQLAlchemy>=2.0
+pydantic>=2.7
+python-dotenv>=1.0
+PyYAML>=6.0
+# Dashboard
+streamlit>=1.40
+plotly>=5.24
+# Reporting
+openpyxl>=3.1
+reportlab>=4.2
+# Testing
+pytest>=8.0
+# PostgreSQL (optional): pip install -r requirements-postgres.txt and set DATABASE_URL=postgresql+psycopg://...

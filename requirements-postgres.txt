@@ -1,0 +1,3 @@
+# Optional: PostgreSQL driver. Install alongside requirements.txt and set
+#   DATABASE_URL=postgresql+psycopg://user:password@host:5432/dbname
+psycopg[binary]>=3.1
